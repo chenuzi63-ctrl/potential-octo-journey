@@ -2,6 +2,7 @@ package com.example.autoclicker.ui
 
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import com.example.autoclicker.engine.AutoClickEngine
 import com.example.autoclicker.model.ClickPoint
 import com.example.autoclicker.model.GestureType
@@ -44,8 +45,11 @@ object OverlayController {
             }
             bar = b
         }
-        bar?.show()
+        // 先铺圆点、再显示控制条，保证控制条位于最上层且始终可点击，
+        // 避免用户进入定位模式后无法退出。
         showPointOverlay(app)
+        bar?.show()
+        bar?.bringToFront()
         refresh()
     }
 
@@ -78,8 +82,14 @@ object OverlayController {
             type = GestureType.TAP
         )
         ConfigStore.saveConfig(context, cfg.copy(points = cfg.points + newPoint))
-        showPointOverlay(context)
+        // 同时把控制条显示出来：否则用户进入定位模式后没有入口退出
+        show(context)
         setEditing(true)
+        Toast.makeText(
+            context.applicationContext,
+            "定位模式：拖动圆点，完成后点悬浮条「定位」退出",
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     fun removePoint(context: Context) {

@@ -153,6 +153,21 @@ class FloatingControlBar(val context: Context) {
         view?.findViewById<Button>(R.id.btnBarStart)?.text = if (running) "■" else "▶"
     }
 
+    /**
+     * 把控制条重新放到窗口栈顶。
+     * Android 没有公开的 bringToFront，只能先 remove 再 add；
+     * 新加入的圆点窗口会盖在同类型窗口之上，因此新增点后需要调用一次。
+     */
+    fun bringToFront() {
+        val v = view ?: return
+        val manager = wm ?: return
+        val params = v.layoutParams as? WindowManager.LayoutParams ?: return
+        runCatching {
+            manager.removeView(v)
+            manager.addView(v, params)
+        }
+    }
+
     fun hide() {
         val v = view ?: return
         runCatching { wm?.removeView(v) }
