@@ -56,6 +56,6 @@ dependencies {
 
     // Shizuku：无 Root 的 ADB 级权限通道，作为 APM / 无障碍不可用时的备选后端。
     // 包名为 rikka.shizuku（v11 起由 moe.shizuku.api 改名）。
-    implementation("dev.rikka.shizuku:api:12.1.0")
-    implementation("dev.rikka.shizuku:provider:12.1.0")
+    implementation("dev.rikka.shizuku:api:13.1.5")
+    implementation("dev.rikka.shizuku:provider:13.1.5")
 }

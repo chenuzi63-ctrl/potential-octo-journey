@@ -72,9 +72,10 @@ class MainActivity : AppCompatActivity() {
         binding.btnSettings.setOnClickListener { startActivity(Intent(this, SettingsActivity::class.java)) }
 
         ConfigBus.addListener(configListener)
-        Shizuku.addBinderReceivedListener(binderReceivedListener)
-        Shizuku.addBinderDeadListener(binderDeadListener)
-        Shizuku.addRequestPermissionResultListener(permissionResultListener)
+        // Shizuku 未安装/未运行时这些 API 可能抛异常，全部做保护，避免启动闪退
+        runCatching { Shizuku.addBinderReceivedListener(binderReceivedListener) }
+        runCatching { Shizuku.addBinderDeadListener(binderDeadListener) }
+        runCatching { Shizuku.addRequestPermissionResultListener(permissionResultListener) }
 
         requestNotificationPermissionIfNeeded()
     }
@@ -88,9 +89,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         ConfigBus.removeListener(configListener)
-        Shizuku.removeBinderReceivedListener(binderReceivedListener)
-        Shizuku.removeBinderDeadListener(binderDeadListener)
-        Shizuku.removeRequestPermissionResultListener(permissionResultListener)
+        runCatching { Shizuku.removeBinderReceivedListener(binderReceivedListener) }
+        runCatching { Shizuku.removeBinderDeadListener(binderDeadListener) }
+        runCatching { Shizuku.removeRequestPermissionResultListener(permissionResultListener) }
         super.onDestroy()
     }
 
@@ -191,8 +192,14 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "请先安装 Shizuku", Toast.LENGTH_LONG).show()
             return
         }
-        if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            Shizuku.requestPermission(REQUEST_SHIZUKU)
+        val granted = runCatching {
+            Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        }.getOrDefault(false)
+        if (!granted) {
+            runCatching { Shizuku.requestPermission(REQUEST_SHIZUKU) }
+                .onFailure {
+                    Toast.makeText(this, "Shizuku 未运行，请先启动 Shizuku 再授权", Toast.LENGTH_LONG).show()
+                }
         } else {
             Toast.makeText(this, "Shizuku 已授权", Toast.LENGTH_SHORT).show()
         }

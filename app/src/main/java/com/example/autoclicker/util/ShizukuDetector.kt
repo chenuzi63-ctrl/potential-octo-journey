@@ -21,8 +21,14 @@ object ShizukuDetector {
     /** Shizuku 服务进程是否存活 */
     fun isRunning(): Boolean = runCatching { Shizuku.pingBinder() }.getOrDefault(false)
 
-    /** 本应用是否已获得 Shizuku 授权 */
-    fun isAuthorized(): Boolean = Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+    /**
+     * 本应用是否已获得 Shizuku 授权。
+     * 注意：Shizuku 未运行/未安装时 checkSelfPermission() 会抛 IllegalStateException，
+     * 必须做异常保护，否则主界面一刷新状态就会崩溃。
+     */
+    fun isAuthorized(): Boolean = runCatching {
+        Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+    }.getOrDefault(false)
 
     /** 是否可直接使用 Shizuku 后端（运行中且已授权） */
     fun isAvailable(context: Context): Boolean = isRunning() && isAuthorized()
