@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">自动点击</string>
+    <string name="accessibility_service_label">自动点击（无障碍手势）</string>
+    <string name="accessibility_service_description">仅用于注入点击/滑动手势，执行用户自定义的自动点击任务。本服务不读取屏幕内容、不采集窗口文本。Android 17 高级保护模式（APM）下自动化工具可能不被视为无障碍工具，此时请改用 Shizuku 后端。</string>
+    <string name="settings_note">说明：\n· 点击间隔最小 10ms，真机建议不低于 5ms 的 UI 事件间隔，避免系统忽略。\n· 所有配置仅保存在本机，不上传任何数据。\n· 紧急停止：音量减键 / 息屏 / 悬浮条停止按钮。</string>
+</resources>

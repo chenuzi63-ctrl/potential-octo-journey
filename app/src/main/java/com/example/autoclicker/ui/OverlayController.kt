@@ -1,0 +1,112 @@
+package com.example.autoclicker.ui
+
+import android.content.Context
+import android.content.Intent
+import com.example.autoclicker.engine.AutoClickEngine
+import com.example.autoclicker.model.ClickPoint
+import com.example.autoclicker.model.GestureType
+import com.example.autoclicker.service.AutoClickForegroundService
+import com.example.autoclicker.util.ConfigStore
+
+/**
+ * 悬浮窗（控制条 + 点击点浮层）的统一协调者。
+ * 控制条按钮动作在此与引擎、配置、点浮层联动。
+ */
+object OverlayController {
+
+    private var bar: FloatingControlBar? = null
+    private var editing = false
+
+    fun show(context: Context) {
+        // 统一使用 applicationContext，避免悬浮窗生命周期被 Activity 重建（如旋转屏幕）拖累。
+        val app = context.applicationContext
+        if (bar == null) {
+            val b = FloatingControlBar(app)
+            b.callback = object : FloatingControlBar.Callback {
+                override fun onToggleStart() {
+                    if (AutoClickEngine.isRunning) AutoClickForegroundService.stop(app)
+                    else AutoClickForegroundService.start(app)
+                }
+
+                override fun onAddPoint() = addPoint(app)
+
+                override fun onRemovePoint() = removePoint(app)
+
+                override fun onToggleEdit() = toggleEdit(app)
+
+                override fun onOpenSettings() {
+                    app.startActivity(
+                        Intent(app, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+
+                override fun onClose() = hide()
+            }
+            bar = b
+        }
+        bar?.show()
+        showPointOverlay(app)
+        refresh()
+    }
+
+    fun hide() {
+        bar?.hide()
+        bar = null
+        PointOverlay.hide()
+    }
+
+    fun toggle(context: Context) {
+        if (bar?.isShowing() == true) hide() else show(context)
+    }
+
+    fun refresh() {
+        val b = bar ?: return
+        b.applyStyle(ConfigStore.loadBarState(b.context))
+        b.setRunning(AutoClickEngine.isRunning)
+        PointOverlay.setPoints(ConfigStore.loadConfig(b.context).points)
+    }
+
+    fun addPoint(context: Context) {
+        val cfg = ConfigStore.loadConfig(context)
+        val newPoint = ClickPoint(
+            label = "点 ${cfg.points.size + 1}",
+            x = cfg.screenWidth / 2f,
+            y = cfg.screenHeight / 2f,
+            intervalMs = 1000,
+            durationMs = 50,
+            count = 0,
+            type = GestureType.TAP
+        )
+        ConfigStore.saveConfig(context, cfg.copy(points = cfg.points + newPoint))
+        showPointOverlay(context)
+        setEditing(true)
+    }
+
+    fun removePoint(context: Context) {
+        val cfg = ConfigStore.loadConfig(context)
+        if (cfg.points.isEmpty()) return
+        ConfigStore.saveConfig(context, cfg.copy(points = cfg.points.dropLast(1)))
+        refresh()
+    }
+
+    fun toggleEdit(context: Context) {
+        showPointOverlay(context)
+        setEditing(!editing)
+    }
+
+    fun setEditing(value: Boolean) {
+        editing = value
+        PointOverlay.setEditing(value)
+    }
+
+    private fun showPointOverlay(context: Context) {
+        if (!PointOverlay.isShowing()) {
+            PointOverlay.show(context, ConfigStore.loadConfig(context).points) { points ->
+                val cfg = ConfigStore.loadConfig(context)
+                ConfigStore.saveConfig(context, cfg.copy(points = points))
+            }
+        } else {
+            PointOverlay.setPoints(ConfigStore.loadConfig(context).points)
+        }
+    }
+}
