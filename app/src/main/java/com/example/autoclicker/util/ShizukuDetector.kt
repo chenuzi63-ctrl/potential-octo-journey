@@ -2,7 +2,7 @@ package com.example.autoclicker.util
 
 import android.content.Context
 import android.content.pm.PackageManager
-import moe.shizuku.api.Shizuku
+import rikka.shizuku.Shizuku
 
 /** Shizuku 可用性检测工具类 */
 object ShizukuDetector {

@@ -15,7 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import moe.shizuku.api.Shizuku
+import rikka.shizuku.Shizuku
 import kotlin.coroutines.resume
 
 /**

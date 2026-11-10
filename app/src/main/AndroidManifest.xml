@@ -64,10 +64,21 @@
                 android:value="automation_gesture_injection" />
         </service>
 
-        <!-- Shizuku 用户服务：运行在 shell(2000) 权限的私有进程内，注入触摸事件 -->
-        <service
-            android:name=".shizuku.ShizukuGestureService"
-            android:exported="false"
-            android:process=":gesture" />
+        <!--
+          Shizuku 必需：向 Shizuku 服务获取 Binder 的 ContentProvider。
+          Shizuku-API 的 provider 库自身清单并不声明它，必须由应用声明。
+        -->
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:enabled="true"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+
+        <!--
+          注意：Shizuku 的用户服务类不是 Android Service，无需在清单中声明。
+          它继承自本应用的 AIDL Stub，由 Shizuku 在 shell 权限进程中反射实例化。
+        -->
     </application>
 </manifest>

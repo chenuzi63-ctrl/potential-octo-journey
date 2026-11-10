@@ -31,7 +31,7 @@ import com.example.autoclicker.util.ShizukuDetector
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import moe.shizuku.api.Shizuku
+import rikka.shizuku.Shizuku
 
 class MainActivity : AppCompatActivity() {
 
