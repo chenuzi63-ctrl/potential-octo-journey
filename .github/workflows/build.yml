@@ -24,10 +24,11 @@ jobs:
         with:
           packages: 'platforms;android-36 build-tools;35.0.0 platform-tools'
 
-      - name: 安装 Gradle 8.7
+      - name: 安装 Gradle 8.9
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.7'
+          # AGP 8.7.3 要求最低 Gradle 8.9（8.7 会直接报版本不兼容）
+          gradle-version: '8.9'
 
       - name: 编译 Debug APK
         run: gradle assembleDebug --no-daemon
