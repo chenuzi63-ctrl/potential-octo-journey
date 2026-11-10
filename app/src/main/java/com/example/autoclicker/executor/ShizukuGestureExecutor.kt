@@ -71,7 +71,8 @@ object ShizukuGestureExecutor : GestureExecutor {
                         .debuggable(BuildConfig.DEBUG)
                     Shizuku.bindUserService(args, conn)
                     cont.invokeOnCancellation {
-                        runCatching { Shizuku.unbindUserService(conn, true) }
+                        // 仅清理本地引用；不同 Shizuku 版本的 unbindUserService 签名不一致，
+                        // 这里不做远程解绑，用户服务会随进程/授权状态自动结束。
                         if (connection === conn) connection = null
                     }
                 } catch (t: Throwable) {
