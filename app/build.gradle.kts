@@ -42,6 +42,8 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        // AGP 8.0 起 AIDL 默认关闭，必须显式开启，否则 IGestureService 不会生成
+        aidl = true
     }
 }
 

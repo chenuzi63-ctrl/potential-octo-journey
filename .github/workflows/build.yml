@@ -19,7 +19,7 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: 安装 Android SDK (API 37)
+      - name: 安装 Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: 'platforms;android-36 build-tools;35.0.0 platform-tools'
@@ -30,8 +30,26 @@ jobs:
           # AGP 8.7.3 要求最低 Gradle 8.9（8.7 会直接报版本不兼容）
           gradle-version: '8.9'
 
+      # 失败时把关键报错输出为 annotation，便于远程定位（日志本身需登录才能看）
       - name: 编译 Debug APK
-        run: gradle assembleDebug --no-daemon
+        shell: bash
+        run: |
+          set +e
+          gradle assembleDebug --no-daemon 2>&1 | tee build.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            summary=$(grep -E "e: |error:|What went wrong|FAILURE:|Unresolved reference|Caused by:|> Task .* FAILED" build.log | head -n 30)
+            escaped=$(printf '%s' "$summary" | sed 's/%/%25/g' | awk 'BEGIN{ORS=""} {print $0"%0A"}')
+            echo "::error title=Gradle error summary::$escaped"
+          fi
+          exit "$code"
+
+      - name: 上传构建日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
 
       - name: 上传 APK 构建产物
         uses: actions/upload-artifact@v4
