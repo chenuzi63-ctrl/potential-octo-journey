@@ -5,14 +5,17 @@ plugins {
 
 android {
     namespace = "com.example.autoclicker"
-    // 目标与编译 SDK 对齐 Android 17（API 37）
-    compileSdk = 37
+    // Android 17（API 37）在 SDK 仓库中拆成了 37.0 / 37.1 / 37.2 三个“次版本”，
+    // 当前 AGP 8.7.3 不支持次版本的 compileSdk 写法（需要 AGP 8.13+），
+    // 因此先用稳定的 Android 16（API 36）保证能编译出 APK。
+    // 应用在 Android 17 设备上仍可正常运行，APM 检测在运行时通过反射完成。
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.autoclicker"
         // 最低支持 Android 7.0（API 24）
         minSdk = 24
-        targetSdk = 37
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
     }

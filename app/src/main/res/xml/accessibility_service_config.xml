@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Android 17 无障碍工具审核（isAccessibilityTool）决策说明：
-  - 声明 isAccessibilityTool="true" 以争取在高级保护模式（APM）下被豁免。
-  - 但 Google 明确将自动化工具、启动器、监控类应用排除在豁免类别之外，因此本应用
-    绝不把全部逻辑押在无障碍上；当 APM 开启导致无障碍被撤销时，自动切换 Shizuku 后端。
+  - 原计划声明 isAccessibilityTool="true" 争取 APM 豁免；但当前构建使用 compileSdk 36，
+    该属性属于 API 37，暂不声明（后续升级 AGP 支持 API 37 后可加回）。
+  - 无论是否声明，Google 都将自动化工具排除在豁免之外，因此本应用绝不把全部逻辑押在
+    无障碍上；当 APM 开启导致无障碍被撤销时，自动切换 Shizuku 后端。
 
   隐私约束：canRetrieveWindowContent="false"，不读取任何窗口内容/节点文本，仅注入手势。
   flagRequestFilterKeyEvents 用于接收物理按键（音量减紧急停止）。
@@ -16,5 +17,4 @@
     android:canRequestFilterKeyEvents="true"
     android:canRetrieveWindowContent="false"
     android:description="@string/accessibility_service_description"
-    android:isAccessibilityTool="true"
     android:notificationTimeout="100" />
