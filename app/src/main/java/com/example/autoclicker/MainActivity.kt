@@ -46,7 +46,12 @@ class MainActivity : AppCompatActivity() {
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
-    private val configListener: () -> Unit = { refreshPointList() }
+    /** 应用内编辑保存时置 true，避免 ConfigBus 触发全量列表重绑打断交互 */
+    private var suppressConfigRefresh = false
+
+    private val configListener: () -> Unit = {
+        if (!suppressConfigRefresh) refreshPointList()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -156,12 +161,26 @@ class MainActivity : AppCompatActivity() {
 
     private fun updatePoint(point: ClickPoint) {
         val cfg = ConfigStore.loadConfig(this)
-        ConfigStore.saveConfig(this, cfg.copy(points = cfg.points.map { if (it.id == point.id) point else it }))
+        // 抑制 ConfigBus → refreshPointList 的全量重绑（会重建正在交互的条目视图），
+        // 由适配器 replaceItem 本地更新，视图状态不被打断
+        suppressConfigRefresh = true
+        try {
+            ConfigStore.saveConfig(this, cfg.copy(points = cfg.points.map { if (it.id == point.id) point else it }))
+        } finally {
+            suppressConfigRefresh = false
+        }
+        adapter.replaceItem(point)
     }
 
     private fun deletePoint(point: ClickPoint) {
         val cfg = ConfigStore.loadConfig(this)
-        ConfigStore.saveConfig(this, cfg.copy(points = cfg.points.filterNot { it.id == point.id }))
+        suppressConfigRefresh = true
+        try {
+            ConfigStore.saveConfig(this, cfg.copy(points = cfg.points.filterNot { it.id == point.id }))
+        } finally {
+            suppressConfigRefresh = false
+        }
+        adapter.removeItem(point.id)
     }
 
     private fun replayLastScript() {

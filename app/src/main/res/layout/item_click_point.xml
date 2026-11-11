@@ -45,7 +45,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="间隔ms"
-            android:inputType="number" />
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:maxLines="1"
+            android:singleLine="true" />
 
         <EditText
             android:id="@+id/etDuration"
@@ -53,7 +56,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="时长ms"
-            android:inputType="number" />
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:maxLines="1"
+            android:singleLine="true" />
 
         <EditText
             android:id="@+id/etCount"
@@ -61,7 +67,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="次数(0=无限)"
-            android:inputType="number" />
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:maxLines="1"
+            android:singleLine="true" />
     </LinearLayout>
 
     <Spinner
