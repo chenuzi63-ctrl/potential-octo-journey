@@ -21,6 +21,7 @@ import com.example.autoclicker.util.ConfigStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -73,6 +74,14 @@ class AutoClickForegroundService : Service() {
 
     private suspend fun startEngine() {
         val config = ConfigStore.loadConfig(this)
+        // 没有任何启用的点击点时直接退出，避免“显示运行中但什么都不做”
+        if (config.enabledPoints.isEmpty()) {
+            updateNotification("没有启用的点击点")
+            AutoClickEngine.stop()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return
+        }
         val executor = AutoClickEngine.start(config, config.recordWhileRunning)
         if (executor == null) {
             updateNotification("无可用执行后端，请授权无障碍或 Shizuku")
@@ -125,6 +134,8 @@ class AutoClickForegroundService : Service() {
 
     override fun onDestroy() {
         AutoClickEngine.stop()
+        // 取消可能仍在进行的 startEngine 协程，避免服务已销毁后引擎又被拉起
+        scope.cancel()
         runCatching { unregisterReceiver(screenOffReceiver) }
         super.onDestroy()
     }
@@ -137,10 +148,17 @@ class AutoClickForegroundService : Service() {
         const val ACTION_START = "com.example.autoclicker.action.START"
         const val ACTION_STOP = "com.example.autoclicker.action.STOP"
 
-        fun start(context: Context) {
-            val i = Intent(context, AutoClickForegroundService::class.java).setAction(ACTION_START)
-            if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(i)
-            else context.startService(i)
+        /**
+         * 启动前台服务。
+         * Android 12+ 在后台启动前台服务可能抛 ForegroundServiceStartNotAllowedException，
+         * 因此这里做异常保护并返回是否启动成功；调用方（如悬浮条）据此提示用户。
+         */
+        fun start(context: Context): Boolean {
+            return runCatching {
+                val i = Intent(context, AutoClickForegroundService::class.java).setAction(ACTION_START)
+                if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(i)
+                else context.startService(i)
+            }.isSuccess
         }
 
         fun stop(context: Context) {

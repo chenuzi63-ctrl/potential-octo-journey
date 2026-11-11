@@ -18,7 +18,6 @@ import com.example.autoclicker.engine.AutoClickEngine
 import com.example.autoclicker.engine.ScriptPlayer
 import com.example.autoclicker.executor.ExecutorManager
 import com.example.autoclicker.model.ClickPoint
-import com.example.autoclicker.model.GestureType
 import com.example.autoclicker.service.AutoClickForegroundService
 import com.example.autoclicker.ui.ClickPointAdapter
 import com.example.autoclicker.ui.OverlayController
@@ -166,6 +165,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun replayLastScript() {
+        // 回放与循环点击会同时注入手势，先禁止并行，避免互相干扰
+        if (AutoClickEngine.isRunning) {
+            Toast.makeText(this, "请先停止当前点击任务再回放", Toast.LENGTH_SHORT).show()
+            return
+        }
         val script = ConfigStore.loadScripts(this).lastOrNull()
         if (script == null) {
             Toast.makeText(this, "暂无录制脚本", Toast.LENGTH_SHORT).show()

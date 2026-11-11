@@ -43,6 +43,8 @@ class AutoClickAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        // 服务被系统关闭（含 APM 撤销权限）时立即停止点击循环，避免引擎空转
+        AutoClickEngine.stop()
         if (instance === this) instance = null
         if (AccessibilityGestureExecutor.service === this) AccessibilityGestureExecutor.service = null
         super.onDestroy()

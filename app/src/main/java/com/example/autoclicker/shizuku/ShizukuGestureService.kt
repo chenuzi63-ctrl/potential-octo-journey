@@ -1,6 +1,5 @@
 package com.example.autoclicker.shizuku
 
-import android.hardware.input.InputManager
 import android.view.InputDevice
 import android.view.InputEvent
 import android.view.MotionEvent

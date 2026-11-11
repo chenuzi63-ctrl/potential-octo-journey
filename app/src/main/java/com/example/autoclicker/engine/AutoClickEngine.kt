@@ -7,6 +7,7 @@ import com.example.autoclicker.executor.GestureExecutor
 import com.example.autoclicker.model.ClickConfig
 import com.example.autoclicker.model.ClickPoint
 import com.example.autoclicker.model.GestureType
+import com.example.autoclicker.service.AutoClickForegroundService
 import com.example.autoclicker.util.ConfigStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +24,12 @@ import java.util.concurrent.ConcurrentHashMap
  * - 后端由 [ExecutorManager] 解析；注入失败短暂退避，避免空转。
  */
 object AutoClickEngine {
+
+    /** 连续注入失败达到该次数后自动整体停止 */
+    private const val MAX_CONSECUTIVE_FAILURES = 30
+
+    /** 注入失败后的重试退避间隔 */
+    private const val FAILURE_RETRY_DELAY_MS = 100L
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val pointJobs = ConcurrentHashMap<String, Job>()
@@ -63,21 +70,42 @@ object AutoClickEngine {
 
     private suspend fun runPoint(point: ClickPoint, executor: GestureExecutor) {
         var executed = 0
+        var consecutiveFailures = 0
         while (isRunning && (point.count == 0 || executed < point.count)) {
             try {
                 execute(executor, point)
                 executed++
                 totalClicks++
+                consecutiveFailures = 0
                 if (point.count != 0 && executed >= point.count) break
                 delay(point.intervalMs)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: GestureException) {
-                delay(100)
+                if (++consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    stopEngineOnFailure()
+                    return
+                }
+                delay(FAILURE_RETRY_DELAY_MS)
             } catch (e: Exception) {
                 if (!isRunning) return
-                delay(100)
+                if (++consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    stopEngineOnFailure()
+                    return
+                }
+                delay(FAILURE_RETRY_DELAY_MS)
             }
+        }
+    }
+
+    /**
+     * 连续注入失败达到阈值（例如无障碍被 APM 撤销、Shizuku 断开）时，
+     * 自动停止引擎并结束前台服务，避免空转循环。
+     */
+    private fun stopEngineOnFailure() {
+        stop()
+        runCatching {
+            AutoClickForegroundService.stop(App.instance)
         }
     }
 

@@ -19,7 +19,7 @@
 
 ### Android 17 适配要点
 
-- `res/xml/accessibility_service_config.xml` 声明了 `android:isAccessibilityTool="true"`，以争取 APM 豁免；但代码中**明确承认自动化工具可能不被 APM 视为无障碍工具**，因此不把全部逻辑押在无障碍上。
+- 原计划在 `res/xml/accessibility_service_config.xml` 声明 `android:isAccessibilityTool="true"` 争取 APM 豁免；因当前用 compileSdk 36 编译、该属性属 API 37，暂未声明（升级 AGP 支持 API 37 后可加回）。代码中**明确承认自动化工具可能不被 APM 视为无障碍工具**，因此不把全部逻辑押在无障碍上，APM 检测在运行时用反射完成。
 - `AdvancedProtectionDetector`（反射探测 `AdvancedProtectionManager`）在启动时检测 APM 状态，据此提示用户切换 Shizuku。
 - APM 开启导致无障碍被系统打断时，`onInterrupt()` 会立即紧急停止。
 
@@ -114,7 +114,7 @@ app/src/main/
 
 - 需要 **JDK 17**。
 - 需要 Android SDK 中安装 **Android 17（API 37）** 平台。
-- 使用 **AGP 8.7.3 + Kotlin 2.0.21**。若提示 `compileSdk 37 未受支持`，已通过 `gradle.properties` 的 `android.suppressUnsupportedCompileSdk=37` 压制；建议升级到 **AGP 8.9+** 以彻底消除。
+- 使用 **AGP 8.7.3 + Kotlin 2.0.21 + Gradle 8.9**，编译目标 **API 36（Android 16）**（Android 17 的 SDK 拆成 37.0/37.1/37.2 次版本，需 AGP 8.13+ 才支持，故暂用 36；应用在 Android 17 设备上可正常运行）。
 - 依赖：AndroidX + Kotlin 协程 + Shizuku（`dev.rikka.shizuku:api:12.1.0` / `provider:12.1.0`）。
 
 ```bash

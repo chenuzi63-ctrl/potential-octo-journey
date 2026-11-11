@@ -25,8 +25,19 @@ object OverlayController {
             val b = FloatingControlBar(app)
             b.callback = object : FloatingControlBar.Callback {
                 override fun onToggleStart() {
-                    if (AutoClickEngine.isRunning) AutoClickForegroundService.stop(app)
-                    else AutoClickForegroundService.start(app)
+                    if (AutoClickEngine.isRunning) {
+                        AutoClickForegroundService.stop(app)
+                    } else {
+                        // Android 12+ 后台启动前台服务可能被系统拒绝，失败时引导用户从应用内启动
+                        val ok = AutoClickForegroundService.start(app)
+                        if (!ok) {
+                            Toast.makeText(
+                                app,
+                                "后台启动被系统限制，请打开应用点「开始」",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
                 }
 
                 override fun onAddPoint() = addPoint(app)

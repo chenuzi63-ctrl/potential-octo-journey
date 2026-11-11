@@ -105,9 +105,11 @@ object PointOverlay {
 
     fun show(context: Context, list: List<ClickPoint>, onChanged: (List<ClickPoint>) -> Unit) {
         hide()
-        appContext = context.applicationContext
+        val app = context.applicationContext
+        appContext = app
         onPointsChanged = onChanged
-        wm = OverlayManager.windowManager(context)
+        // 统一用 applicationContext 取 WindowManager，避免 Activity 销毁后 BadTokenException
+        wm = OverlayManager.windowManager(app)
         points.clear()
         points.addAll(list)
         rebuild()
@@ -166,8 +168,11 @@ object PointOverlay {
                     size,
                     size,
                     OverlayManager.windowType(),
+                    // FLAG_LAYOUT_IN_SCREEN：坐标按整块屏幕计（含状态栏），
+                    // 与注入手势使用的绝对坐标一致，避免圆点位置与点击落点偏移
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                     PixelFormat.TRANSLUCENT
                 ).apply {
                     gravity = Gravity.TOP or Gravity.START
